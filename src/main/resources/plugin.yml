@@ -1,0 +1,10 @@
+name: RushHelper
+main: jp.rs.rushhelper.Main
+version: 1.0.0;
+depend: [RSTeamAPI]
+commands:
+    rh:
+        description: all commands are available in it
+        usage: /<command> <subcommand> [args]...
+        default: op
+        
