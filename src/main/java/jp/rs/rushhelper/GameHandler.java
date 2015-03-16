@@ -1,6 +1,7 @@
 package jp.rs.rushhelper;
 
 import jp.rs.rsteamapi.RSTeamAPI;
+import jp.rs.rsteamapi.scoreboard.RSTeam;
 import jp.rs.rsteamapi.scoreboard.RSTeam.RSTeamColor;
 import jp.rs.rsteamapi.scoreboard.SbManager;
 import jp.rs.rushhelper.Config.JsonConfigHandler;
@@ -45,7 +46,9 @@ public class GameHandler {
         timer = new Timer(plugin,180L);
         bm.GenerateBoth();
         smr.getTeam(RSTeamColor.RED).getFunction().teleport(jconfig.getLocation(RSTeamColor.RED, ConfigLocationType.START));
+        smr.getTeam(RSTeamColor.RED).getFunction().Heal();
         smr.getTeam(RSTeamColor.BLUE).getFunction().teleport(jconfig.getLocation(RSTeamColor.BLUE, ConfigLocationType.START));
+        smr.getTeam(RSTeamColor.BLUE).getFunction().Heal();
         Messanger msgr = new Messanger(Messanger.PopType.SURROUNDED,
         jconfig.getMessage(ConfigMsgType.START));
         msgr.process();
@@ -62,29 +65,19 @@ public class GameHandler {
             if (smr.getTeam(RSTeamColor.RED).getNumberOfMembers() == 0
                     || smr.getTeam(RSTeamColor.BLUE).getNumberOfMembers() == 0) {
                 if (status.equals(GameStatus.PROGRESS) || status.equals(GameStatus.STARTING)) {
-                    Stop();
+                    End(true);
                 }
             }
         }
 
     }
     
-    public void Stop(){
-        this.status = GameStatus.AWAIT;
-        timer.setCancelled(true);
+    private void Calculate_Score()
+    {
         int rn = smr.getTeam(RSTeamColor.RED).getNumberOfMembers();
         int bn = smr.getTeam(RSTeamColor.BLUE).getNumberOfMembers();
         RSTeamColor win = (rn >= bn)?RSTeamColor.RED : RSTeamColor.BLUE;
         RSTeamColor lose = (win == RSTeamColor.RED)?RSTeamColor.BLUE : RSTeamColor.RED;
-        bm.DestroyBoth();
-        
-        smr.getTeam(win).getFunction().teleport(jconfig.getLocation(win, ConfigLocationType.BED).getWorld().getSpawnLocation());
-        smr.getTeam(lose).getFunction().teleport(jconfig.getLocation(lose, ConfigLocationType.BED).getWorld().getSpawnLocation());
-        
-        smr.getTeam(win).clear();
-        smr.getTeam(lose).clear();
-        
-        ptc.clear();
         Messanger msgr;
         msgr = new Messanger(PopType.SURROUNDED,jconfig.getMessage(ConfigMsgType.ANNI));
         msgr.replaceformatting(lose);
@@ -92,6 +85,34 @@ public class GameHandler {
         msgr = new Messanger(PopType.SURROUNDED,jconfig.getMessage(ConfigMsgType.WIN));
         msgr.replaceformatting(win);
         msgr.process();
+        
+    }
+    private void End_Process1()
+    {
+        this.status = GameStatus.AWAIT;
+        timer.setCancelled(true); 
+    }
+    private void End_Process2()
+    {
+        bm.DestroyBoth();
+        RSTeam red = smr.getTeam(RSTeamColor.RED);
+        RSTeam blue = smr.getTeam(RSTeamColor.BLUE);
+        red.getFunction().teleport(jconfig.getLocation(red.getTeamColor(), ConfigLocationType.BED).getWorld().getSpawnLocation());
+        blue.getFunction().teleport(jconfig.getLocation(blue.getTeamColor(), ConfigLocationType.BED).getWorld().getSpawnLocation());
+        red.clear();
+        blue.clear();
+        ptc.clear();
+    }
+    /**
+     * 
+     * @param b whether enable calculate score
+     */
+    public void End(boolean b){
+        End_Process1();
+        if(b){
+            Calculate_Score();
+        }
+        End_Process2();        
     }
     public boolean BedDestroyed(RSTeamColor color){
         return bm.isDestroyed(color);

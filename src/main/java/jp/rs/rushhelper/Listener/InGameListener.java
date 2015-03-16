@@ -1,32 +1,28 @@
 package jp.rs.rushhelper.Listener;
 
+import java.util.Iterator;
+import java.util.List;
 import jp.rs.rsteamapi.RSTeamAPI;
 import jp.rs.rsteamapi.scoreboard.RSTeam;
 import jp.rs.rsteamapi.scoreboard.SbManager;
 import jp.rs.rushhelper.GameHandler.GameStatus;
 import jp.rs.rushhelper.Main;
+import jp.rs.rushhelper.Utils.RSMaterialContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.NPC;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
-import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
@@ -64,7 +60,7 @@ public class InGameListener implements Listener {
         }
     }
     @EventHandler
-    public void oonCraft(PrepareItemCraftEvent e)
+    public void onCraft(PrepareItemCraftEvent e)
     {
         if(e.getViewers().get(0) instanceof Player) 
         {
@@ -91,5 +87,26 @@ public class InGameListener implements Listener {
                 }
             }
         }
+    }
+    @EventHandler
+    public void onTNTExplode(EntityExplodeEvent e)
+    {
+        List<Block> bl = e.blockList();
+         if (!plugin.getGameHandler().getStatus().equals(GameStatus.AWAIT)) {
+             if (e.getEntity().getType().equals(EntityType.PRIMED_TNT))
+             {
+                 for (Iterator<Block> it = bl.iterator(); it.hasNext();) 
+                 {
+                     Block b = it.next();
+                     for(RSMaterialContainer m : plugin.getJConfigHandler().getTNTUnBreakableMaterialList())
+                     {
+                         if(m.EqualsTo(b))
+                         {
+                             it.remove();
+                         }
+                     }
+                 }
+             }
+         }
     }
 }

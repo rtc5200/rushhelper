@@ -14,17 +14,18 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jp.rs.rsteamapi.scoreboard.RSTeam.RSTeamColor;
 import jp.rs.rushhelper.Main;
+import jp.rs.rushhelper.Utils.RSMaterialContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.material.MaterialData;
 
 /**
  *
@@ -72,8 +73,9 @@ public class JsonConfigHandler {
         }
         zconf = (ConfigValues_zahyou) readJson(file_zahyou,ConfigValues_zahyou.class);
         mconf = (ConfigValues_msgs) readJson(file_msgs,ConfigValues_msgs.class);
-        bconf = (ConfigValues_Basic) readJson(file_basics,ConfigValues_Basic.class);
-        bconf.ConvertStringToMaterial();
+        bconf = (ConfigValues_Basic) readJson(file_basics,ConfigValues_Basic.class); 
+        bconf.ItemBlockConvert();
+        bconf.TNTUnBreakableBlockConvert();        
     }
 
     private void writeJson(File file,Object object) {
@@ -111,8 +113,12 @@ public class JsonConfigHandler {
     public boolean getNPCProtectionEnable(){
         return bconf.EnableNPCProtection;
     }
-    public List<Material> getItemBlockMaterialList(){
+    public List<RSMaterialContainer> getItemBlockMaterialList(){
         return bconf.getItemBlockMaterials();
+    }
+    public List<RSMaterialContainer> getTNTUnBreakableMaterialList()
+    {
+        return bconf.getTNTUnBreakableBlockMaterials();
     }
     
     
@@ -121,31 +127,64 @@ public class JsonConfigHandler {
         protected boolean EnableNPCProtection = true;
         @SerializedName("右クリックでアイテムを出現させるブロックID")
         protected String ItemBlocks = "41";
-        private transient ArrayList<Material> mlist = new ArrayList<>();
+        @SerializedName("TNTで破壊しないブロックID")
+        protected String TNTUnBreakableBlocks = "1";
+        private transient ArrayList<RSMaterialContainer> mlist;
+        private transient ArrayList<RSMaterialContainer> tmlist;
         
-        public List<Material> getItemBlockMaterials(){
-           return Collections.unmodifiableList(mlist);
-           
+        public ConfigValues_Basic ()
+        {
+            ItemBlockConvert();
+            TNTUnBreakableBlockConvert();
         }
-        public void ConvertStringToMaterial(){
+        
+        public List<RSMaterialContainer> getItemBlockMaterials(){
+           return Collections.unmodifiableList(mlist);
+        }
+        public List<RSMaterialContainer> getTNTUnBreakableBlockMaterials()
+        {
+            return Collections.unmodifiableList(tmlist);
+        }
+        public void ItemBlockConvert(){
             mlist = new ArrayList<>();
+            mlist = Convert(mlist,ItemBlocks.split(","));
+        }
+        public void TNTUnBreakableBlockConvert()
+        {
+            tmlist = new ArrayList<>();
+            tmlist = Convert(tmlist,TNTUnBreakableBlocks.split(","));
+        }
+        private ArrayList<RSMaterialContainer> Convert(ArrayList<RSMaterialContainer> l,String[] tgt)
+        {
             Pattern p = Pattern.compile("([0-9]+)(:([0-9]))?");
             Matcher m;
-            for(String s : ItemBlocks.split(",")){
+            for(String s : tgt){
                 m = p.matcher(s);
                 if(m.matches()){
                     String id = m.group(1);
                     String meta = m.group(3);
-                    MaterialData md = new MaterialData(Integer.parseInt(id));
-                    if(meta != null){
-                        md.setData(Byte.parseByte(meta));
+                    Material ml = null;
+                    byte md = (byte)0;
+                    try{
+                        ml = Material.getMaterial(Integer.parseInt(id)); 
+                        if(ml == null)
+                        {
+                            System.out.println("ID:" + id + "は無効です.");
+                            continue;
+                        }
+                        if(meta != null)
+                        {
+                            md = Byte.parseByte(meta);
+                        } 
+                    }catch(NumberFormatException e)
+                    {
+                        System.out.println("NumberFormatExceptionが発生しましたが,ノープロブレムです");
                     }
-                    mlist.add(md.getItemType());
+                    l.add(new RSMaterialContainer(ml,md));
                 }
             }
-        }
-        
-        
+            return l;
+        }    
     }
         
     private class ConfigValues_zahyou {
@@ -218,7 +257,7 @@ public class JsonConfigHandler {
         String msg_on_start;
         @SerializedName("ベッドが再設置された時のメッセージ")
         String msg_on_bed_restored;
-        @SerializedName("途中参加時のメッセージ")
+        @SerializedName("参加時のメッセージ")
         String msg_on_join;
         @SerializedName("全滅した時のメッセージ")
         String msg_on_anni;
@@ -242,7 +281,7 @@ public class JsonConfigHandler {
         public ConfigValues_msgs(){
             this.msg_on_start = ChatColor.AQUA + "ゲームが開始されました!\n健闘を祈ります!";
             this.msg_on_bed_restored = "%tチームのベッドが%pによって再設置されました!";
-            this.msg_on_join = ChatColor.BOLD + "%p" +  ChatColor.RESET + "が途中参加しました!";
+            this.msg_on_join = ChatColor.BOLD + "%p" +  ChatColor.RESET + "が参加しました!";
             this.msg_on_anni = "%tチームが全滅しました。";
             this.msg_on_win  = "%tチームの勝利です。";
         }

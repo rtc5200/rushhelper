@@ -131,47 +131,12 @@ public class BedManager implements Listener {
             RSTeam PTeam = smr.getTeam(p);
             if (PTeam != null) {
                 if (isSpawnBed(RSTeamColor.RED, b)) {
-                    if(PTeam.getTeamColor() == RSTeamColor.RED){
-                        p.sendMessage("自分のチームのベッドは壊せません。");
-                        e.setCancelled(true);
-                        return;
-                    }
-                    Messanger msgr = new Messanger(PopType.SURROUNDED, "赤チームのベッドが%pによって破壊されました。");
-                    msgr.replaceformatting(p);
-                    msgr.process();
-                    e.setCancelled(true);
-                    EraseBedDrops(b);
-                    b.setType(Material.AIR);
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                            @Override
-                            public void run() {
-                                Item item = e.getBlock().getLocation().getWorld().dropItem(e.getBlock().getLocation(), 
-                                        getTeamBedItem(RSTeamColor.RED));
-                                item.setVelocity(new Vector(0,0,0));
-                            }
-                        });
-                    return;
+                   p.sendMessage("ゲーム中のプレイヤーはベッドを壊せません。");
+                   e.setCancelled(true);
                 }
                 if (isSpawnBed(RSTeamColor.BLUE, b)) {
-                    if(smr.getTeam(p).getTeamColor() == RSTeamColor.BLUE){
-                        p.sendMessage("自分のチームのベッドは壊せません。");
-                        e.setCancelled(true);
-                        return;
-                    }
-                    Messanger msgr = new Messanger(PopType.SURROUNDED, "青チームのベッドが%pによって破壊されました。");
-                    msgr.replaceformatting(p);
-                    msgr.process();
+                    p.sendMessage("ゲーム中のプレイヤーはベッドを壊せません。");
                     e.setCancelled(true);
-                    EraseBedDrops(b);
-                    b.setType(Material.AIR);
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                            @Override
-                            public void run() {
-                                Item item = e.getBlock().getLocation().getWorld().dropItem(e.getBlock().getLocation(), 
-                                        getTeamBedItem(RSTeamColor.BLUE));
-                                item.setVelocity(new Vector(0,0,0));
-                            }
-                        });
                 }
             }
         }

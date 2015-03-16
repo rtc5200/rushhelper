@@ -26,6 +26,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.Vector;
 import net.minecraft.server.v1_7_R1.PacketPlayInClientCommand;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 /**
@@ -52,10 +53,14 @@ public class TeamEventsListener implements Listener {
         if(plugin.getGameHandler().getStatus() == GameStatus.STARTING){
             Messanger msgr = new Messanger(PopType.SURROUNDED,
             plugin.getJConfigHandler().getMessage(ConfigMsgType.JOIN));
+            msgr.replaceformatting(team.getTeamColor(),p);
             msgr.process();
         }
         plugin.log.log(Level.INFO,"{0}が{1}チームに参加しました。",
                 new String[]{p.getDisplayName(),team.getTeamColor().Localize()});
+        p.setExp(0f);
+        p.setLevel(0);
+        p.setHealth(p.getMaxHealth());
     }
     @EventHandler
     public void onTeamLeave(PlayerTeamQuitEvent e)
@@ -67,6 +72,7 @@ public class TeamEventsListener implements Listener {
          msgr.replaceformatting(team.getTeamColor(),p);
          msgr.process();
          p.getInventory().clear();
+         p.setHealth(p.getMaxHealth());
     }
     @EventHandler(priority = EventPriority.LOW)
     public void onLogout(PlayerQuitEvent e)
@@ -77,6 +83,11 @@ public class TeamEventsListener implements Listener {
             team.removePlayer(p);
         }
         changeNameColor(p,ChatColor.RESET);    
+    }
+    @EventHandler
+    public void onLogin(PlayerJoinEvent e)
+    {
+        changeNameColor(e.getPlayer(),ChatColor.RESET);
     }
 
     @EventHandler(priority = EventPriority.LOW)

@@ -6,6 +6,7 @@ import jp.rs.rsteamapi.scoreboard.RSTeam;
 import jp.rs.rsteamapi.scoreboard.SbManager;
 import jp.rs.rushhelper.GameHandler.GameStatus;
 import jp.rs.rushhelper.Main;
+import jp.rs.rushhelper.Utils.RSMaterialContainer;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -33,10 +34,14 @@ public class ItemBlockListener implements Listener{
         Player p = e.getPlayer();
         RSTeam PTeam = smr.getTeam(p);
         Block b = e.getClickedBlock();
+        boolean detect = false;
         if(PTeam != null){
             if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
-                if(plugin.getJConfigHandler().getItemBlockMaterialList().contains(b.getType())){
-                    if(plugin.getGameHandler().ptc.isPassed(p, 5000L)){
+                for(RSMaterialContainer m : plugin.getJConfigHandler().getItemBlockMaterialList())
+                {
+                    if(m.EqualsTo(b))
+                    {
+                        if(plugin.getGameHandler().ptc.isPassed(p, 5000L)){
                         //p.sendMessage("I'll give you item later");
                         ItemStack item = getGiveItem(); 
                         p.getInventory().addItem(item);
@@ -44,6 +49,8 @@ public class ItemBlockListener implements Listener{
                         if(item.getType() != Material.AIR){
                             plugin.getGameHandler().ptc.record(p);
                         } 
+                        break;
+                    }
                     }
                 }
             }
@@ -51,10 +58,16 @@ public class ItemBlockListener implements Listener{
     }
     @EventHandler
     public void ItemBlockBreak(BlockDamageEvent e){
+        Block b = e.getBlock();
         if(plugin.getGameHandler().getStatus() != GameStatus.AWAIT){
-            if(plugin.getJConfigHandler().getItemBlockMaterialList().contains(e.getBlock().getType())){
-                e.getPlayer().sendMessage("アイテムブロックは壊せません。");
-            e.setCancelled(true);
+            for(RSMaterialContainer m : plugin.getJConfigHandler().getItemBlockMaterialList())
+            {
+                 if(m.EqualsTo(b))
+                 {
+                     e.getPlayer().sendMessage("アイテムブロックは壊せません。");
+                     e.setCancelled(true);
+                     break;
+                 }
             }
         }
     }
@@ -71,12 +84,6 @@ public class ItemBlockListener implements Listener{
         }else{
             result = new ItemStack(266);
         }
-        switch(r.nextInt(10)){
-            case 0:result = new ItemStack(336);break;//brick
-            case 1:result = new ItemStack(265);break;//iron_ingot
-            case 2:result = new ItemStack(266);break;//gold_ingot
-            default:result = new ItemStack(Material.AIR);break;
-        }  
         return result;
     }
 }

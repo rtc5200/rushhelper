@@ -32,6 +32,9 @@ public class CommandAccepter implements CommandExecutor {
                     exe = new StartCommand(plugin, sender, cmd, args);
                 } else if(args[0].equalsIgnoreCase("join")){
                     exe = new JoinCommand(plugin, sender, cmd, args);
+                } else if(args[0].equalsIgnoreCase("test"))
+                {
+                    exe = new TestCommand(plugin,sender,cmd,args);
                 }
                 if (exe != null) {
                     exe.Execute();
